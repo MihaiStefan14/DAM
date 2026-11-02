@@ -55,3 +55,5 @@ JUnit (`Test1`-`Test6`, suita `AllTests`).
 
 - Tomsa Cosmin Mihai
 - Mihai-Stefan Farcal
+- Paula-Cristiana Cojocaru
+- Dragos Iacob

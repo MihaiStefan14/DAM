@@ -28,10 +28,10 @@ public class Test1_SimpleDomainService {
 	public void test() {
 		logger.info("Service implementation object :: " + service);
 
-		// Registru_1 este seedat in RegistruCasaEntityFactoryBase.initDomainServiceEntities()
-		// cu 1 incasare + 1 plata
-		Integer numarOperatiuni = service.getNumarOperatiuni(1);
-		assertTrue(numarOperatiuni > 0, "Operatiunile (incasari+plati) nu se numara...");
+		// Registru_1 (ziua de ieri) este seedat in RegistruCasaEntityFactoryBase.initDomainServiceEntities()
+		// cu incasarea in numerar din raportul Z + un avans
+		Integer numarOperatiuni = service.getNumarOperatiuni(1L);
+		assertTrue(numarOperatiuni == 2, "Operatiunile de casa nu se numara corect...");
 		logger.info("Numar operatiuni Registru_1:: " + numarOperatiuni);
 	}
 }

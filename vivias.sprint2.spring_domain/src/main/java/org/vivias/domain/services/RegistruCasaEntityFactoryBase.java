@@ -9,12 +9,11 @@ import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-import org.vivias.domain.casierie.Incasare;
-import org.vivias.domain.casierie.Incasare.TipIncasare;
-import org.vivias.domain.casierie.Plata;
-import org.vivias.domain.casierie.Plata.TipDestinatie;
+import org.vivias.domain.casierie.PlafoaneNumerar;
+import org.vivias.domain.casierie.RaportZ;
 import org.vivias.domain.casierie.RegistruCasa;
 import org.vivias.domain.casierie.Suma;
+import org.vivias.domain.casierie.TipOperatiune;
 
 // Aggregate Entity Factory (SDI Bean Component)
 @Component("RegistruCasaEntityFactoryBase")
@@ -31,6 +30,10 @@ public class RegistruCasaEntityFactoryBase implements IRegistruCasaEntityFactory
 	@Autowired
 	private IRegistruCasaEntityRepository entityRepository;
 
+	// parametru al aplicatiei, folosit la inchiderea zilei din datele seed
+	@Autowired
+	private PlafoaneNumerar plafoane;
+
 	@Override
 	public void setRegistruCasaEntityRepository(IRegistruCasaEntityRepository repository) {
 		this.entityRepository = repository;
@@ -42,9 +45,13 @@ public class RegistruCasaEntityFactoryBase implements IRegistruCasaEntityFactory
 	}
 
 	@Override
-	public RegistruCasa buildRegistruCasa(LocalDate data, Suma soldInitial) {
-		Integer nextID = this.entityRepository.getNextID();
-		return new RegistruCasa(nextID, data, soldInitial);
+	public RegistruCasa buildRegistruCasa(LocalDate data, Suma soldDeschidere) {
+		Long nextID = this.entityRepository.getNextID();
+		return new RegistruCasa(nextID, data, soldDeschidere);
+	}
+
+	private static Suma lei(long valoare) {
+		return new Suma(BigDecimal.valueOf(valoare));
 	}
 
 	@PostConstruct
@@ -52,18 +59,23 @@ public class RegistruCasaEntityFactoryBase implements IRegistruCasaEntityFactory
 	public void initDomainServiceEntities() {
 		logger.info(">> PostConstruct :: initDomainServiceEntities");
 
-		// Registru_1: seed data identic cu scenariul Gherkin din User Story 5
-		// (Sprint 1): soldInitial 1000, incasari 500, plati 300 -> soldCalculat 1200
-		RegistruCasa registru1 = buildRegistruCasa(LocalDate.now(), new Suma(BigDecimal.valueOf(1000)));
-		registru1.adaugaIncasare(new Incasare(new Suma(BigDecimal.valueOf(500)), TipIncasare.NUMERAR, "Vanzari ziua curenta"));
-		registru1.adaugaPlata(new Plata(new Suma(BigDecimal.valueOf(300)), "Furnizor marfa", TipDestinatie.FURNIZOR));
-		entityRepository.add(registru1);
+		// Ziua de ieri, INCHISA: 800 + 250 (numerar din raport Z) - 50 (avans) = 1000.
+		// Cardul (120) apare in raportul Z, dar nu intra in casa.
+		RegistruCasa ieri = buildRegistruCasa(LocalDate.now().minusDays(1), lei(800));
+		ieri.ataseazaRaportZ(new RaportZ(1, lei(120), lei(250)));
+		ieri.inregistreazaOperatiune(TipOperatiune.AVANS, lei(50), "Dispozitie de plata nr. 1");
+		ieri.incepeInchiderea();
+		ieri.introduceSoldFaptic(lei(1000));
+		ieri.inchide(plafoane);
+		entityRepository.add(ieri);
 
-		// Registru_2: fara diferente (soldFaptic = soldCalculat la inchidere)
-		RegistruCasa registru2 = buildRegistruCasa(LocalDate.now().minusDays(1), new Suma(BigDecimal.valueOf(800)));
-		registru2.adaugaIncasare(new Incasare(new Suma(BigDecimal.valueOf(250)), TipIncasare.CARD, "Vanzari card"));
-		registru2.adaugaPlata(new Plata(new Suma(BigDecimal.valueOf(100)), "Avans salariu Ionescu M.", TipDestinatie.AVANS));
-		entityRepository.add(registru2);
+		// Ziua de azi, DESCHISA, cu soldul de deschidere = soldul final de ieri.
+		// Seed identic cu scenariul Gherkin din User Story 5 (DAM Sprint 1):
+		// sold 1000, incasari 500, plati 300 -> sold scriptic 1200
+		RegistruCasa azi = buildRegistruCasa(LocalDate.now(), ieri.getSoldFaptic());
+		azi.ataseazaRaportZ(new RaportZ(2, lei(300), lei(500)));
+		azi.inregistreazaOperatiune(TipOperatiune.PLATA_FURNIZOR, lei(300), "Dispozitie de plata nr. 2", 98L, null);
+		entityRepository.add(azi);
 
 		logger.info(">> EntityRepository registru.count :: " + entityRepository.size());
 	}

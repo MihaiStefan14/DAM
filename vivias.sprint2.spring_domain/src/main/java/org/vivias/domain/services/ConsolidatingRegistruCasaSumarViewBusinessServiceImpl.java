@@ -6,6 +6,8 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.vivias.domain.casierie.PlafoaneNumerar;
+import org.vivias.domain.casierie.RaportZ;
 import org.vivias.domain.casierie.RegistruCasa;
 import org.vivias.domain.casierie.RegistruCasaSumarView;
 
@@ -17,16 +19,23 @@ public class ConsolidatingRegistruCasaSumarViewBusinessServiceImpl
 	@Autowired
 	private ICalculatingRegistruCasaDomainService calculatingService;
 
+	// parametru al aplicatiei (AppScanConfig)
+	@Autowired
+	private PlafoaneNumerar plafoane;
+
 	@Override
 	public RegistruCasaSumarView getRegistruCasaSumarViewDataOf(RegistruCasa registru) {
-		calculatingService.calculeazaSoldCalculat(registru);
 		calculatingService.calculeazaDiferenta(registru);
+		RaportZ raportZ = registru.getRaportZ();
 
 		return new RegistruCasaSumarView(
-				registru.getRegistruId(), registru.getData(), registru.getStare(),
-				registru.getSoldInitial(), registru.getSoldCalculat(), registru.getSoldFaptic(),
+				registru.getIdRegistru(), registru.getData(), registru.getStare(),
+				registru.getSoldDeschidere(), registru.getSoldScriptic(), registru.getSoldFaptic(),
 				registru.getDiferentaValoare(), registru.getDiferentaTip(),
-				registru.getIncasari().size(), registru.getPlati().size());
+				raportZ == null ? null : raportZ.getVanzariCard(),
+				raportZ == null ? null : raportZ.getVanzariNumerar(),
+				registru.getOperatii().size(),
+				calculatingService.calculeazaPropunereDepunere(registru, plafoane));
 	}
 
 	@Override

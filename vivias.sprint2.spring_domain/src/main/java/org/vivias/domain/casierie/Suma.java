@@ -3,6 +3,7 @@ package org.vivias.domain.casierie;
 import java.io.Serializable;
 import java.math.BigDecimal;
 
+import javax.persistence.Convert;
 import javax.persistence.Embeddable;
 import javax.validation.constraints.DecimalMin;
 import javax.validation.constraints.NotNull;
@@ -11,6 +12,8 @@ import javax.validation.constraints.NotNull;
  * Value Object (Shared Kernel in Tabelul 1.2 din Cap.1): o sumă de bani
  * exprimată printr-o valoare și o monedă. Două sume se adună doar dacă au
  * aceeași monedă.
+ *
+ * Imutabil: fara setteri, operatiile (adauga/scade/abs) intorc o noua Suma.
  */
 @Embeddable
 public class Suma implements Serializable, Comparable<Suma> {
@@ -19,15 +22,17 @@ public class Suma implements Serializable, Comparable<Suma> {
 	@DecimalMin(value = "0.0", message = "Suma nu poate fi negativă!")
 	private BigDecimal valoare;
 
+	// VO Custom Data Type: persistat prin MonedaConverter (cod ISO)
+	@Convert(converter = MonedaConverter.class)
 	private Moneda moneda = Moneda.RON;
 
-	public Suma() {
+	// necesar doar pentru JPA (@Embeddable)
+	protected Suma() {
 		super();
 	}
 
 	public Suma(BigDecimal valoare) {
-		this.valoare = valoare;
-		this.moneda = Moneda.RON;
+		this(valoare, Moneda.RON);
 	}
 
 	public Suma(BigDecimal valoare, Moneda moneda) {
@@ -39,36 +44,60 @@ public class Suma implements Serializable, Comparable<Suma> {
 		this(BigDecimal.valueOf(valoare));
 	}
 
-	public BigDecimal getValoare() {
-		return valoare;
+	public static Suma zero(Moneda moneda) {
+		return new Suma(BigDecimal.ZERO, moneda);
 	}
 
-	public void setValoare(BigDecimal valoare) {
-		this.valoare = valoare;
+	public BigDecimal getValoare() {
+		return valoare;
 	}
 
 	public Moneda getMoneda() {
 		return moneda;
 	}
 
-	public void setMoneda(Moneda moneda) {
-		this.moneda = moneda;
-	}
-
-	public Suma adauga(Suma alta) {
+	public Suma aduna(Suma alta) {
 		if (alta == null)
 			return this;
-		if (this.moneda != alta.moneda)
-			throw new IllegalArgumentException("Nu se pot aduna sume in monede diferite: " + this.moneda + " vs " + alta.moneda);
+		verificaAceeasiMoneda(alta, "aduna");
 		return new Suma(this.valoare.add(alta.valoare), this.moneda);
 	}
 
 	public Suma scade(Suma alta) {
 		if (alta == null)
 			return this;
-		if (this.moneda != alta.moneda)
-			throw new IllegalArgumentException("Nu se pot scadea sume in monede diferite: " + this.moneda + " vs " + alta.moneda);
+		verificaAceeasiMoneda(alta, "scadea");
 		return new Suma(this.valoare.subtract(alta.valoare), this.moneda);
+	}
+
+	public Suma absoluta() {
+		return new Suma(this.valoare.abs(), this.moneda);
+	}
+
+	public boolean esteMaiMicaDecat(Suma alta) {
+		verificaAceeasiMoneda(alta, "compara");
+		return this.valoare.compareTo(alta.valoare) < 0;
+	}
+
+	// -1, 0 sau 1
+	public int semn() {
+		return this.valoare.signum();
+	}
+
+	// ex: "-50 lei", "1200 lei", "20 EUR" (pentru mesajele catre utilizator)
+	public String formatata() {
+		String unitate = (moneda == Moneda.RON) ? "lei" : moneda.name();
+		return valoare.stripTrailingZeros().toPlainString() + " " + unitate;
+	}
+
+	public boolean areAceeasiMoneda(Suma alta) {
+		return alta != null && this.moneda == alta.moneda;
+	}
+
+	private void verificaAceeasiMoneda(Suma alta, String operatie) {
+		if (!areAceeasiMoneda(alta))
+			throw new IllegalArgumentException(
+					"Nu se pot " + operatie + " sume in monede diferite: " + this.moneda + " vs " + alta.moneda);
 	}
 
 	@Override

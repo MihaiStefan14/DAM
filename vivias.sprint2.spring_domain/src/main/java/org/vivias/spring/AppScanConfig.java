@@ -1,5 +1,6 @@
 package org.vivias.spring;
 
+import java.math.BigDecimal;
 import java.util.logging.Logger;
 
 import javax.validation.Validation;
@@ -14,6 +15,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.vivias.application.services.IPlanningRegistruCasaBusinessWorkflowService;
+import org.vivias.domain.casierie.PlafoaneNumerar;
+import org.vivias.domain.casierie.Suma;
 import org.vivias.domain.services.IAuditingRegistruCasaBusinessWorkflowService;
 
 @Configuration
@@ -40,6 +43,14 @@ public class AppScanConfig {
 				(IPlanningRegistruCasaBusinessWorkflowService) pf.getProxy();
 
 		return proxyAuditedApplicationService;
+	}
+
+	// Parametru al aplicatiei (APOO cap. 1.1: plafoanele nu se scriu in codul de domeniu):
+	// plafonul intern de casa stabilit de administrator.
+	// static: nu depinde de campurile @Autowired ale acestei clase de configurare
+	@Bean
+	public static PlafoaneNumerar plafoaneNumerar() {
+		return new PlafoaneNumerar(new Suma(BigDecimal.valueOf(2000)));
 	}
 
 	@Bean

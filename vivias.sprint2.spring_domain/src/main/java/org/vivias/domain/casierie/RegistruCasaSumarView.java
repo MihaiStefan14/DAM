@@ -5,41 +5,47 @@ import java.time.LocalDate;
 /**
  * Domain Entity View (analog ProjectCurrentReleaseView din modelul
  * msd.t2_c4.spring_domain): structura tuplu, read-only, consolidata
- * pentru raportarea starii unui registru de casa zilnic.
+ * pentru ecranul de inchidere a zilei (APOO CU5, pasul 3).
  */
 public class RegistruCasaSumarView {
-	private Integer registruId;
+	private Long idRegistru;
 	private LocalDate data;
 	private StareRegistru stare;
 
-	private Suma soldInitial;
-	private Suma soldCalculat;
+	private Suma soldDeschidere;
+	private Suma soldScriptic;
 	private Suma soldFaptic;
 
 	private Suma diferentaValoare;
 	private TipDiferenta diferentaTip;
 
-	private Integer numarIncasari = 0;
-	private Integer numarPlati = 0;
+	// din raportul Z (cardul nu intra in casa, dar apare in raport)
+	private Suma vanzariCard;
+	private Suma vanzariNumerar;
 
-	public RegistruCasaSumarView(Integer registruId, LocalDate data, StareRegistru stare, Suma soldInitial,
-			Suma soldCalculat, Suma soldFaptic, Suma diferentaValoare, TipDiferenta diferentaTip,
-			Integer numarIncasari, Integer numarPlati) {
+	private Integer numarOperatiuni = 0;
+	private Suma propunereDepunere;
+
+	public RegistruCasaSumarView(Long idRegistru, LocalDate data, StareRegistru stare, Suma soldDeschidere,
+			Suma soldScriptic, Suma soldFaptic, Suma diferentaValoare, TipDiferenta diferentaTip, Suma vanzariCard,
+			Suma vanzariNumerar, Integer numarOperatiuni, Suma propunereDepunere) {
 		super();
-		this.registruId = registruId;
+		this.idRegistru = idRegistru;
 		this.data = data;
 		this.stare = stare;
-		this.soldInitial = soldInitial;
-		this.soldCalculat = soldCalculat;
+		this.soldDeschidere = soldDeschidere;
+		this.soldScriptic = soldScriptic;
 		this.soldFaptic = soldFaptic;
 		this.diferentaValoare = diferentaValoare;
 		this.diferentaTip = diferentaTip;
-		this.numarIncasari = numarIncasari;
-		this.numarPlati = numarPlati;
+		this.vanzariCard = vanzariCard;
+		this.vanzariNumerar = vanzariNumerar;
+		this.numarOperatiuni = numarOperatiuni;
+		this.propunereDepunere = propunereDepunere;
 	}
 
-	public Integer getRegistruId() {
-		return registruId;
+	public Long getIdRegistru() {
+		return idRegistru;
 	}
 
 	public LocalDate getData() {
@@ -50,12 +56,12 @@ public class RegistruCasaSumarView {
 		return stare;
 	}
 
-	public Suma getSoldInitial() {
-		return soldInitial;
+	public Suma getSoldDeschidere() {
+		return soldDeschidere;
 	}
 
-	public Suma getSoldCalculat() {
-		return soldCalculat;
+	public Suma getSoldScriptic() {
+		return soldScriptic;
 	}
 
 	public Suma getSoldFaptic() {
@@ -70,19 +76,28 @@ public class RegistruCasaSumarView {
 		return diferentaTip;
 	}
 
-	public Integer getNumarIncasari() {
-		return numarIncasari;
+	public Suma getVanzariCard() {
+		return vanzariCard;
 	}
 
-	public Integer getNumarPlati() {
-		return numarPlati;
+	public Suma getVanzariNumerar() {
+		return vanzariNumerar;
+	}
+
+	public Integer getNumarOperatiuni() {
+		return numarOperatiuni;
+	}
+
+	public Suma getPropunereDepunere() {
+		return propunereDepunere;
 	}
 
 	@Override
 	public String toString() {
-		return "RegistruCasaSumarView [registruId=" + registruId + ", data=" + data + ", stare=" + stare
-				+ ", soldInitial=" + soldInitial + ", soldCalculat=" + soldCalculat + ", soldFaptic=" + soldFaptic
-				+ ", diferentaValoare=" + diferentaValoare + ", diferentaTip=" + diferentaTip + ", numarIncasari="
-				+ numarIncasari + ", numarPlati=" + numarPlati + "]";
+		return "RegistruCasaSumarView [idRegistru=" + idRegistru + ", data=" + data + ", stare=" + stare
+				+ ", soldDeschidere=" + soldDeschidere + ", soldScriptic=" + soldScriptic + ", soldFaptic="
+				+ soldFaptic + ", diferentaValoare=" + diferentaValoare + ", diferentaTip=" + diferentaTip
+				+ ", vanzariCard=" + vanzariCard + ", vanzariNumerar=" + vanzariNumerar + ", numarOperatiuni="
+				+ numarOperatiuni + ", propunereDepunere=" + propunereDepunere + "]";
 	}
 }

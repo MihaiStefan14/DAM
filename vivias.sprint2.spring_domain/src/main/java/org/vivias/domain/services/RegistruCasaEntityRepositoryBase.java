@@ -1,7 +1,9 @@
 package org.vivias.domain.services;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +12,7 @@ import java.util.logging.Logger;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.vivias.domain.casierie.RegistruCasa;
+import org.vivias.domain.casierie.StareRegistru;
 
 // SDI Bean Component
 @Component
@@ -22,23 +25,23 @@ public class RegistruCasaEntityRepositoryBase implements IRegistruCasaEntityRepo
 		logger.info(">>> BEAN: RegistruCasaEntityRepositoryBase instantiated!");
 	}
 
-	private Map<Integer, RegistruCasa> entities = new HashMap<>();
-	private Integer nextID = 0;
+	private Map<Long, RegistruCasa> entities = new HashMap<>();
+	private Long nextID = 0L;
 
 	@Override
-	public Integer getNextID() {
+	public Long getNextID() {
 		nextID++;
 		return nextID;
 	}
 
 	@Override
-	public RegistruCasa getById(Integer id) {
+	public RegistruCasa getById(Long id) {
 		return entities.get(id);
 	}
 
 	@Override
 	public RegistruCasa get(RegistruCasa sample) {
-		return getById(sample.getRegistruId());
+		return getById(sample.getIdRegistru());
 	}
 
 	@Override
@@ -49,12 +52,28 @@ public class RegistruCasaEntityRepositoryBase implements IRegistruCasaEntityRepo
 	}
 
 	@Override
+	public RegistruCasa getByData(LocalDate data) {
+		return entities.values().stream()
+				.filter(r -> data.equals(r.getData()))
+				.findFirst()
+				.orElse(null);
+	}
+
+	@Override
+	public RegistruCasa getUltimulInchisInainte(LocalDate data) {
+		return entities.values().stream()
+				.filter(r -> r.getStare() == StareRegistru.INCHIS && r.getData().isBefore(data))
+				.max(Comparator.comparing(RegistruCasa::getData))
+				.orElse(null);
+	}
+
+	@Override
 	public RegistruCasa add(RegistruCasa entity) {
-		if (entity.getRegistruId() == null) {
+		if (entity.getIdRegistru() == null) {
 			nextID++;
-			entity.setRegistruId(nextID);
+			entity.setIdRegistru(nextID);
 		}
-		entities.put(entity.getRegistruId(), entity);
+		entities.put(entity.getIdRegistru(), entity);
 		return entity;
 	}
 
@@ -68,7 +87,7 @@ public class RegistruCasaEntityRepositoryBase implements IRegistruCasaEntityRepo
 	@Override
 	public boolean remove(RegistruCasa entity) {
 		if (this.entities.containsValue(entity)) {
-			this.entities.remove(entity.getRegistruId());
+			this.entities.remove(entity.getIdRegistru());
 			return true;
 		}
 		return false;

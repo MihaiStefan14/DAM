@@ -7,19 +7,19 @@ package org.vivias.domain.casierie;
  * audit si GDPR - Generic Subdomain).
  */
 public class RegistruCasaAuditView {
-	private Integer registruId;
+	private Long idRegistru;
 	private Suma suma;
 	private EOperatiuneCasa operatiune;
 
-	public RegistruCasaAuditView(Integer registruId, Suma suma, EOperatiuneCasa operatiune) {
+	public RegistruCasaAuditView(Long idRegistru, Suma suma, EOperatiuneCasa operatiune) {
 		super();
-		this.registruId = registruId;
+		this.idRegistru = idRegistru;
 		this.suma = suma;
 		this.operatiune = operatiune;
 	}
 
-	public Integer getRegistruId() {
-		return registruId;
+	public Long getIdRegistru() {
+		return idRegistru;
 	}
 
 	public Suma getSuma() {
@@ -32,11 +32,12 @@ public class RegistruCasaAuditView {
 
 	@Override
 	public String toString() {
-		return "RegistruCasaAuditView [registruId=" + registruId + ", suma=" + suma + ", operatiune=" + operatiune
+		return "RegistruCasaAuditView [idRegistru=" + idRegistru + ", suma=" + suma + ", operatiune=" + operatiune
 				+ "]";
 	}
 
 	public enum EOperatiuneCasa {
-		INCASARE_ADAUGATA, PLATA_ADAUGATA, ZI_INCHISA, DIFERENTA_REGULARIZATA;
+		REGISTRU_DESCHIS, RAPORT_Z_ATASAT, OPERATIUNE_INREGISTRATA, DIFERENTA_CONSTATATA, DIFERENTA_JUSTIFICATA,
+		DIFERENTA_REGULARIZATA, ZI_INCHISA;
 	}
 }

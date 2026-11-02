@@ -7,8 +7,9 @@ import org.vivias.domain.casierie.Suma;
 
 public interface IRegistruCasaEntityFactory {
 
-	// build registru with: data=today, soldInitial = given, stare = DESCHIS
-	public RegistruCasa buildRegistruCasa(LocalDate data, Suma soldInitial);
+	// build registru with: data, soldDeschidere = given, stare = DESCHIS, fara operatiuni;
+	// operatiunile (componentele) le creeaza radacina: inregistreazaOperatiune / ataseazaRaportZ
+	public RegistruCasa buildRegistruCasa(LocalDate data, Suma soldDeschidere);
 
 	// Dependencies to get IDs
 	public void setRegistruCasaEntityRepository(IRegistruCasaEntityRepository repository);

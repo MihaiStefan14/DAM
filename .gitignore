@@ -1,0 +1,6 @@
+target/
+*.class
+.idea/
+.ai/
+.claude/
+.remember/

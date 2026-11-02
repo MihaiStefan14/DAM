@@ -40,17 +40,21 @@ public class ValidatingRegistruCasaDomainServiceImpl
 		Set<String> violations = validate(registru);
 		logger.info("Violations count (to generate exception): " + violations.size());
 
-		if (violations.size() > 0) {
-			String violationExceptionMessage = violations.stream()
-					.map(v -> "\n>>> JEE.Spring bean validator exception: " + v)
-					.collect(Collectors.joining(", "));
-			try {
-				validateRegistruCasaAggregate(registru);
-			} catch (Exception ex) {
-				violationExceptionMessage += "\n>>> Local validation: " + ex.getMessage();
-			}
-			throw new Exception(violationExceptionMessage);
+		String violationExceptionMessage = violations.stream()
+				.map(v -> "\n>>> JEE.Spring bean validator exception: " + v)
+				.collect(Collectors.joining(", "));
+
+		// regulile de agregat se verifica mereu, nu doar cand exista si violari JSR-380
+		boolean agregatValid = true;
+		try {
+			validateRegistruCasaAggregate(registru);
+		} catch (RuntimeException ex) {
+			agregatValid = false;
+			violationExceptionMessage += "\n>>> Local validation: " + ex.getMessage();
 		}
+
+		if (!violations.isEmpty() || !agregatValid)
+			throw new Exception(violationExceptionMessage);
 	}
 
 	// Event-based Business Service Integration (SpringEvents listening)
@@ -74,14 +78,24 @@ public class ValidatingRegistruCasaDomainServiceImpl
 			throw new RuntimeException("Null RegistruCasa!");
 		if (registru.getData() == null)
 			throw new RuntimeException("Data registrului este obligatorie!");
-		if (registru.getSoldInitial() == null || registru.getSoldInitial().getValoare() == null
-				|| registru.getSoldInitial().getValoare().compareTo(BigDecimal.ZERO) < 0)
-			throw new RuntimeException("Soldul initial trebuie sa fie >= 0!");
-		// regula din User Story 5 (Sprint 1): ziua nu se poate inchide fara
-		// soldul faptic numarat de casier
-		if ((registru.getStare() == StareRegistru.CU_DIFERENTE || registru.getStare() == StareRegistru.REGULARIZAT
-				|| registru.getStare() == StareRegistru.INCHIS) && registru.getSoldFaptic() == null)
+		if (registru.getSoldDeschidere() == null || registru.getSoldDeschidere().getValoare() == null
+				|| registru.getSoldDeschidere().getValoare().compareTo(BigDecimal.ZERO) < 0)
+			throw new RuntimeException("Soldul de deschidere trebuie sa fie >= 0!");
+		// numerarul din casa nu poate fi negativ
+		if (registru.calculeazaSoldScriptic().semn() < 0)
+			throw new RuntimeException("Soldul scriptic al casei nu poate fi negativ!");
+
+		StareRegistru stare = registru.getStare();
+		// CU5: ziua nu se poate inchide fara raportul Z si fara soldul numarat de casier
+		if (stare != StareRegistru.DESCHIS && registru.getRaportZ() == null)
+			throw new RuntimeException("Lipsește raportul Z");
+		if ((stare == StareRegistru.CU_DIFERENTE || stare == StareRegistru.REGULARIZAT
+				|| stare == StareRegistru.INCHIS) && registru.getSoldFaptic() == null)
 			throw new RuntimeException("Soldul faptic este obligatoriu la inchiderea zilei!");
+		// CU5, alternativa 1: o zi inchisa cu diferenta trebuie sa fi fost justificata si aprobata
+		if (stare == StareRegistru.INCHIS && !registru.getSoldFaptic().equals(registru.calculeazaSoldScriptic())
+				&& (registru.getNotaExplicativa() == null || registru.getAprobatDe() == null))
+			throw new RuntimeException("Ziua a fost inchisa cu o diferenta nejustificata sau neaprobata!");
 		return true;
 	}
 }

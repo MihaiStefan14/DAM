@@ -9,8 +9,8 @@ import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.Enumerated;
-import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -23,8 +23,8 @@ import javax.validation.constraints.Size;
 @Entity
 public class Plata implements Serializable, Comparable<Plata> {
 
+	// ID local, in namespace-ul agregatului: atribuit de RegistruCasa.adaugaPlata(...)
 	@Id
-	@GeneratedValue
 	private Integer plataId;
 
 	@NotNull(message = "Suma platii este obligatorie!")
@@ -41,6 +41,10 @@ public class Plata implements Serializable, Comparable<Plata> {
 	private TipDestinatie tipDestinatie = TipDestinatie.FURNIZOR;
 
 	private LocalDateTime oraInregistrarii = LocalDateTime.now();
+
+	// Back-reference spre radacina agregatului (owner-ul relatiei: mappedBy="registru")
+	@ManyToOne
+	private RegistruCasa registru;
 
 	public Plata() {
 		super();
@@ -92,11 +96,20 @@ public class Plata implements Serializable, Comparable<Plata> {
 		this.oraInregistrarii = oraInregistrarii;
 	}
 
+	public RegistruCasa getRegistru() {
+		return registru;
+	}
+
+	public void setRegistru(RegistruCasa registru) {
+		this.registru = registru;
+	}
+
 	@Override
 	public int compareTo(Plata alta) {
 		return this.oraInregistrarii.compareTo(alta.oraInregistrarii);
 	}
 
+	// fara "registru" in toString: ar intra in recursivitate cu RegistruCasa.toString()
 	@Override
 	public String toString() {
 		return "\n\t\tPlata [plataId=" + plataId + ", suma=" + suma + ", destinatie=" + destinatie + "]";

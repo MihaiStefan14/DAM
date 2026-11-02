@@ -9,8 +9,8 @@ import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.Enumerated;
-import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -22,8 +22,8 @@ import javax.validation.constraints.NotNull;
 @Entity
 public class Incasare implements Serializable, Comparable<Incasare> {
 
+	// ID local, in namespace-ul agregatului: atribuit de RegistruCasa.adaugaIncasare(...)
 	@Id
-	@GeneratedValue
 	private Integer incasareId;
 
 	@NotNull(message = "Suma incasarii este obligatorie!")
@@ -39,6 +39,10 @@ public class Incasare implements Serializable, Comparable<Incasare> {
 	private String clientSauObservatii;
 
 	private LocalDateTime oraInregistrarii = LocalDateTime.now();
+
+	// Back-reference spre radacina agregatului (owner-ul relatiei: mappedBy="registru")
+	@ManyToOne
+	private RegistruCasa registru;
 
 	public Incasare() {
 		super();
@@ -90,11 +94,20 @@ public class Incasare implements Serializable, Comparable<Incasare> {
 		this.oraInregistrarii = oraInregistrarii;
 	}
 
+	public RegistruCasa getRegistru() {
+		return registru;
+	}
+
+	public void setRegistru(RegistruCasa registru) {
+		this.registru = registru;
+	}
+
 	@Override
 	public int compareTo(Incasare alta) {
 		return this.oraInregistrarii.compareTo(alta.oraInregistrarii);
 	}
 
+	// fara "registru" in toString: ar intra in recursivitate cu RegistruCasa.toString()
 	@Override
 	public String toString() {
 		return "\n\t\tIncasare [incasareId=" + incasareId + ", suma=" + suma + ", tip=" + tip + "]";

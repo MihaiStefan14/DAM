@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.vivias.domain.casierie.PlafoaneNumerar;
 import org.vivias.domain.casierie.RaportZ;
 import org.vivias.domain.casierie.RegistruCasa;
@@ -28,6 +29,7 @@ import org.vivias.infrastructure.IRegistruCasaRepository;
  * preluat din ziua anterioara).
  */
 @Service("PlanningRegistruCasaBusinessWorkflowServiceFacade")
+@Transactional // fiecare pas al workflow-ului: o singura tranzactie (o exceptie de validare anuleaza tot)
 public class PlanningRegistruCasaBusinessWorkflowServiceImpl implements IPlanningRegistruCasaBusinessWorkflowService {
 
 	// Support Services
